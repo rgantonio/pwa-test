@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>List Shuffler</title>
+
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#111111" />
+
+  <!-- iOS niceties -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 24px; }
+    h1 { font-size: 22px; margin: 0 0 12px; }
+    textarea { width: 100%; height: 140px; font-size: 16px; padding: 12px; box-sizing: border-box; }
+    .row { display: flex; gap: 10px; margin: 12px 0; flex-wrap: wrap; }
+    button {
+      padding: 10px 14px; font-size: 16px; border: 0; border-radius: 10px;
+      background: #111; color: white; cursor: pointer;
+    }
+    button.secondary { background: #e9e9e9; color: #111; }
+    ul { padding-left: 18px; }
+    .hint { color: #666; font-size: 13px; margin-top: 8px; }
+    .card { border: 1px solid #e5e5e5; border-radius: 14px; padding: 14px; }
+  </style>
+</head>
+<body>
+  <h1>List Shuffler</h1>
+
+  <div class="card">
+    <div>Enter one item per line:</div>
+    <textarea id="input" spellcheck="false">A
+B
+C
+D</textarea>
+
+    <div class="row">
+      <button id="shuffleBtn">Shuffle</button>
+      <button class="secondary" id="sortBtn" title="Sort alphabetically">Sort</button>
+      <button class="secondary" id="clearBtn">Clear</button>
+    </div>
+
+    <div><strong>Output:</strong></div>
+    <ul id="output"></ul>
+
+    <div class="hint">
+      Tip: After hosting this, open it on your phone and “Add to Home Screen” to install as an app.
+    </div>
+  </div>
+
+  <script>
+    const input = document.getElementById("input");
+    const output = document.getElementById("output");
+
+    function getItems() {
+      return input.value
+        .split(/\r?\n/)
+        .map(s => s.trim())
+        .filter(Boolean);
+    }
+
+    function render(items) {
+      output.innerHTML = "";
+      for (const it of items) {
+        const li = document.createElement("li");
+        li.textContent = it;
+        output.appendChild(li);
+      }
+    }
+
+    function shuffle(items) {
+      // Fisher–Yates
+      for (let i = items.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [items[i], items[j]] = [items[j], items[i]];
+      }
+      return items;
+    }
+
+    document.getElementById("shuffleBtn").addEventListener("click", () => {
+      const items = getItems();
+      shuffle(items);
+      render(items);
+    });
+
+    document.getElementById("sortBtn").addEventListener("click", () => {
+      const items = getItems().sort((a,b) => a.localeCompare(b));
+      render(items);
+    });
+
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      input.value = "";
+      render([]);
+    });
+
+    // initial render
+    render(getItems());
+
+    // Register service worker for offline support
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./sw.js");
+    }
+  </script>
+</body>
+</html>
